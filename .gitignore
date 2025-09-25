@@ -37,7 +37,6 @@ ehthumbs.db
 Thumbs.db
 /node_modules
 /coverage
-/sf-main-doj-review
 .env
 /dry
 example1.txt

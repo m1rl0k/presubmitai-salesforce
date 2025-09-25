@@ -28,21 +28,50 @@ function resolveGitHubToken(): string {
   throw new Error('No GITHUB_TOKEN found; set env/.env or run `gh auth login`.');
 }
 
-async function listPRs(owner = 'goodyear', repo = 'sf-main-doj-review', state: 'open'|'closed'|'all' = 'open', limit = 10) {
+function resolveRepository(): { owner: string; repo: string } {
+  // Check environment variable first (format: owner/repo)
+  if (process.env.GITHUB_REPOSITORY) {
+    const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+    if (owner && repo) {
+      return { owner, repo };
+    }
+  }
+
+  // Try to get from git remote
+  try {
+    const remoteUrl = execSync('git remote get-url origin', { encoding: 'utf8' }).trim();
+    // Parse GitHub URLs: https://github.com/owner/repo.git or git@github.com:owner/repo.git
+    const match = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/.]+)/);
+    if (match) {
+      return { owner: match[1], repo: match[2] };
+    }
+  } catch {}
+
+  throw new Error('Could not determine repository. Set GITHUB_REPOSITORY env var (format: owner/repo) or run from a git repository with GitHub remote.');
+}
+
+async function listPRs(owner?: string, repo?: string, state: 'open'|'closed'|'all' = 'open', limit = 10) {
   const token = resolveGitHubToken();
+  const repository = owner && repo ? { owner, repo } : resolveRepository();
   const octokit = initOctokit(token, process.env.GITHUB_API_URL || undefined);
-  const all = await octokit.paginate(octokit.rest.pulls.list, { owner, repo, state, per_page: 100 });
+  const all = await octokit.paginate(octokit.rest.pulls.list, {
+    owner: repository.owner,
+    repo: repository.repo,
+    state,
+    per_page: 100
+  });
   const items = all.slice(0, limit);
   for (const p of items) {
     console.log(`#${p.number} ${p.title} by @${p.user?.login}`);
   }
 }
 
-async function reviewPR(prNumber: number, dryRun: boolean, owner = 'goodyear', repo = 'sf-main-doj-review', full = false, out?: string | boolean) {
+async function reviewPR(prNumber: number, dryRun: boolean, owner?: string, repo?: string, full = false, out?: string | boolean) {
   // Ensure token is available for loadDebugContext
   resolveGitHubToken();
+  const repository = owner && repo ? { owner, repo } : resolveRepository();
   process.env.DEBUG = '1';
-  process.env.GITHUB_REPOSITORY = `${owner}/${repo}`;
+  process.env.GITHUB_REPOSITORY = `${repository.owner}/${repository.repo}`;
   process.env.GITHUB_PULL_REQUEST = String(prNumber);
   process.env.GITHUB_EVENT_NAME = 'pull_request';
   process.env.GITHUB_EVENT_ACTION = 'synchronize';
@@ -89,6 +118,8 @@ function parseArgs(argv: string[]) {
     else if (a === '--limit') { args.limit = parseInt(argv[++i] || '10', 10); }
     else if (a === '--pr') { args.pr = parseInt(argv[++i] || '0', 10); }
     else if (a === '--event') { args.event = argv[++i]; }
+    else if (a === '--owner') { args.owner = argv[++i]; }
+    else if (a === '--repo') { args.repo = argv[++i]; }
     else if (a === '--out' || a === '-out') { const next = argv[i+1]; if (next && !next.startsWith('-')) { args.out = next; i++; } else { args.out = true; } }
     else args._.push(a);
   }
@@ -98,11 +129,11 @@ function parseArgs(argv: string[]) {
 export async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.listPrs) {
-    await listPRs('goodyear', 'sf-main-doj-review', args.state || 'open', args.limit || 10);
+    await listPRs(args.owner, args.repo, args.state || 'open', args.limit || 10);
     return;
   }
   if (args.pr) {
-    await reviewPR(args.pr, !!args.dryRun, 'goodyear', 'sf-main-doj-review', !!args.full, args.out);
+    await reviewPR(args.pr, !!args.dryRun, args.owner, args.repo, !!args.full, args.out);
     return;
   }
   if (args.event) {
@@ -110,7 +141,7 @@ export async function main() {
     process.exitCode = 2;
     return;
   }
-  console.log('Usage:\n  review --list-prs [--state open|closed|all] [--limit N]\n  review --pr <number> [--dry-run] [--full] [--out [path] | -out [path]]\n  review --event <path> [--dry-run] (not yet implemented)');
+  console.log('Usage:\n  review --list-prs [--state open|closed|all] [--limit N] [--owner <owner>] [--repo <repo>]\n  review --pr <number> [--dry-run] [--full] [--out [path] | -out [path]] [--owner <owner>] [--repo <repo>]\n  review --event <path> [--dry-run] (not yet implemented)');
 }
 
 if (require.main === module) {

@@ -150,7 +150,8 @@ Commands:
 
 Notes:
 - Uses your `gh auth token`; no GitHub writes occur in `--dry-run`.
-- Defaults to repository `goodyear/sf-main-doj-review`.
+- Auto-detects repository from `GITHUB_REPOSITORY` env var or git remote origin.
+- Use `--owner <owner> --repo <repo>` to override repository detection.
 - Event-file mode is not yet implemented in the CLI.
 
 
