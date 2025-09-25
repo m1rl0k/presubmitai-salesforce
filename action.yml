@@ -1,0 +1,45 @@
+name: "Presubmit - AI Code Review & Fixes"
+description: "AI-powered code reviews that detect issues, provide summaries, and suggest auto-fixes on PRs."
+author: "Presubmit.ai"
+branding:
+  icon: "check-square"
+  color: "black"
+
+runs:
+  using: "node20"
+  main: "dist/main.js"
+
+inputs:
+  style_guide_rules:
+    required: false
+    description: 'Custom style guide rules that will be enforced during review by generating critical comments'
+    default: ''
+  github_api_url:
+    required: false
+    description: 'GitHub API URL for GitHub Enterprise Server (e.g., https://github.example.com/api/v3)'
+    default: 'https://api.github.com'
+  github_server_url:
+    required: false
+    description: 'GitHub Server URL for GitHub Enterprise Server (e.g., https://github.example.com)'
+    default: 'https://github.com'
+  salesforce_mode:
+    required: false
+    description: 'Salesforce review mode: on | off | auto'
+    default: 'auto'
+  llm_model:
+    required: false
+    description: 'Override LLM model (e.g., gpt-4o-mini)'
+    default: ''
+  llm_provider:
+    required: false
+    description: 'Override LLM provider (e.g., ai-sdk)'
+    default: ''
+
+  review_scopes:
+    required: false
+    description: 'Comma-separated review scopes to run: data-model,flows,apex'
+    default: ''
+  allow_title_update:
+    required: false
+    description: 'Allow the action to update PR title when @presubmit is present (default: false)'
+    default: 'false'
