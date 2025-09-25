@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-   SalesforceAI Code Reviewer
+   SalesforceAI Code Reviewer - Based on Presubmit.ai
   </h1>
 
   <p><em>Context-aware, intelligent and instant PR reviews</em></p>
