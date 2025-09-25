@@ -65,7 +65,7 @@ Interactive discussions help clarify implementation details:
 Add this GitHub Action to your repository by creating `.github/workflows/presubmit.yml`:
 
 ```yaml
-name: doj-ai-reviewer
+name: salesforce-reviewer
 
 permissions:
   contents: read
@@ -88,7 +88,7 @@ jobs:
             echo "Error: LLM_API_KEY secret is not configured"
             exit 1
           fi
-      - uses: ./doj-ai-reviewer@latest
+      - uses: ./salesforce-reviewer@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
@@ -106,7 +106,7 @@ The action requires:
 If you're using GitHub Enterprise Server, you can configure the action to work with your instance by adding these environment variables:
 
 ```yaml
-      - uses: ./doj-ai-reviewer@latest
+      - uses: ./salesforce-reviewer@latest
         env:
           GITHUB_API_URL: "https://github.example.com/api/v3"
           GITHUB_SERVER_URL: "https://github.example.com"
@@ -115,7 +115,7 @@ If you're using GitHub Enterprise Server, you can configure the action to work w
 You can also configure these settings using input parameters:
 
 ```yaml
-      - uses: ./doj-ai-reviewer@latest
+      - uses: ./salesforce-reviewer@latest
         with:
           github_api_url: "https://github.example.com/api/v3"
           github_server_url: "https://github.example.com"
@@ -183,7 +183,7 @@ Add one of the following to your workflow step that uses the action:
 
 
 ````yaml
-- uses: ./doj-ai-reviewer@latest
+- uses: ./salesforce-reviewer@latest
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
@@ -196,7 +196,7 @@ Add one of the following to your workflow step that uses the action:
 
 
 ````yaml
-- uses: ./doj-ai-reviewer@latest
+- uses: ./salesforce-reviewer@latest
   with:
     salesforce_mode: "on"
   env:
